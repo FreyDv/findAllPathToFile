@@ -3,27 +3,23 @@ const path = require('path')
 
 //Переменная списка адресов файлов
 let listFile = []
+
 //Первоначальный путь к хранилищу
 const PATH_TO_STORAGE = path.resolve(__dirname,'storage')
 
 // Фунция формирует масив адресов елементов в заданной директории
-async function findDir(pathX) {
-    let dir = []
-    dir = await fs.readdir(pathX).then((d) => d)
-    dir = dir.map((value) => path.join(pathX, value))
-    return dir
+function findDir(pathX) {
+    return  fs.readdir(pathX).then((d) => d.map((value) => path.join(pathX, value)))
 }
 // Функция Возврашает tru если заданный путь является ПАПКОЙ
-async function isDir(pathX){
-    let res =await fs.stat(pathX).then((stat)=> stat)
-    return res.isDirectory()
+function isDir(pathX){
+    return  fs.stat(pathX).then((stat)=> stat.isDirectory())
 }
 // Функция пробега по вложенностям и поиском файлов.
  async function parserDir (dir= [PATH_TO_STORAGE]) {
-     let _isDir
-     let _nextDir
+
      let tempRes
-     let listDir = []
+     const listDir = []
 
      // Если на вход пришла строка  - ее засуну в масив так как ниже работаю с масивом
      if (typeof dir === 'string') dir[0] = dir
@@ -31,24 +27,18 @@ async function isDir(pathX){
      // Если в директории несколько элементов
       if (Array.isArray(dir)) {
           for (let string of dir) {
-              _isDir = await isDir(string).then((res) => res)
-
+              const _isDir = await isDir(string)
               // Если директория
               if (_isDir) {
-
                   //смотрю вложеную директорию
-                  _nextDir = await findDir(string).then((res) => res)
-
+                  const _nextDir = await findDir(string)
                   // рекурсивно вызываю эту же функцию
                   tempRes =  await parserDir(_nextDir)
-
                   // прохожусь по результирующему массиву и записываю его в список
                   tempRes.forEach((i)=>listDir.push(i))
               }
-
               // Если НЕ директория - значит файл
               else {
-
                   // тогда записываю в список путь к файлу
                   listDir.push(string)
               }
