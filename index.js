@@ -19,52 +19,66 @@ async function isDir(pathX){
     return res.isDirectory()
 }
 // Функция пробега по вложенностям и поиском файлов.
- async function X (dir= PATH_TO_STORAGE) {
+ async function parserDir (dir= [PATH_TO_STORAGE]) {
      let _isDir
      let _nextDir
+     let tempRes
+     let listDir = []
+
+     // Если на вход пришла строка  - ее засуну в масив так как ниже работаю с масивом
+     if (typeof dir === 'string') dir[0] = dir
 
      // Если в директории несколько элементов
-     if (Array.isArray(dir)) {
-         for (let string of dir) {
+      if (Array.isArray(dir)) {
+          for (let string of dir) {
+              _isDir = await isDir(string).then((res) => res)
 
-             _isDir = await isDir(string).then((res) => res)
-             // Если директория
-             if (_isDir) {
-                 //смотрю вложеную директорию
-                 _nextDir = await findDir(string).then((res) => res)
-                 // рекурсивно вызываю эту же функцию
-                 await X(_nextDir)
-             }
-             // Если НЕ директория - значит файл
-             else{
-                 // тогда записываю в список путь к файлу
-                 listFile.push(string)
-             }
-         }
-     }
-     //Если в дириктории один елемент
-     else{
-         _isDir = await (isDir(dir).then((res) => res))
-         // Если дириктория
-         if (_isDir) {
-             //смотрю вложеную деректорию
-             _nextDir = await findDir(dir).then((res) => res)
-             // рекурсивно вызываю эту же функцию
-             X(_nextDir)
-         }
-         // Если НЕ дириктория - значит файл
-         else{
-             // тогда записываю в список путь к файлу
-             listFile.push(dir)
-         }
-     }
+              // Если директория
+              if (_isDir) {
+
+                  //смотрю вложеную директорию
+                  _nextDir = await findDir(string).then((res) => res)
+
+                  // рекурсивно вызываю эту же функцию
+                  tempRes =  await parserDir(_nextDir)
+
+                  // прохожусь по результирующему массиву и записываю его в список
+                  tempRes.forEach((i)=>listDir.push(i))
+              }
+
+              // Если НЕ директория - значит файл
+              else {
+
+                  // тогда записываю в список путь к файлу
+                  listDir.push(string)
+              }
+          }
+      }
+     return listDir
  }
 
- //Вызов основной функции прохода по вложеностям в результате undefined так как наверное then срабатывает по окончанию первого выполнения функции
-// а так как там много рекурсии функция заканчивает свое выполнение 13 раз, по этому на первом окончании список пуст.
-X().then((res)=>console.log(res))
+parserDir().then((res)=>console.log(res))
 
-// Но если подождать около 100 ms видно что логика функции работает
-setTimeout(()=>console.log(listFile),100)
+// в результате получаю функцию которая проходит по всем вложеным директориям хранилища и находит пути к этим файлам
+// обрабатываю если в папке более одного файла и исключая пустые папки. Список Выводиться в виде масива
 
-// но я не смог найти решение как обработать без setTimeout. Пробовал Promise.all() но он наверное не для этого(
+// Result:
+
+// Array(15) ["D:\F\storage\201\asd.txt", "D:\F\storage\201\sales.json", "D:\F\storage\202\asd.txt", "D:\F\storage\202\sales.json", "D:\F\storage\203\asd.txt", "D:\F\storage\203\sales.json", "D:\F\storage\204\asd.txt", "D:\F\storage\204\sales.json", "D:\F\storage\205\205_1\asd.txt", "D:\F\storage\205\205_1\sales.json", "D:\F\storage\205\205_2\app.js", "D:\F\storage\205\205_2\asd.txt", "D:\F\storage\205\205_2\sales.json", "D:\F\storage\205\asd.txt", "D:\F\storage\206\asd.txt"]
+// 0 = "D:\F\storage\201\asd.txt"
+// 1 = "D:\F\storage\201\sales.json"
+// 2 = "D:\F\storage\202\asd.txt"
+// 3 = "D:\F\storage\202\sales.json"
+// 4 = "D:\F\storage\203\asd.txt"
+// 5 = "D:\F\storage\203\sales.json"
+// 6 = "D:\F\storage\204\asd.txt"
+// 7 = "D:\F\storage\204\sales.json"
+// 8 = "D:\F\storage\205\205_1\asd.txt"
+// 9 = "D:\F\storage\205\205_1\sales.json"
+// 10 = "D:\F\storage\205\205_2\app.js"
+// 11 = "D:\F\storage\205\205_2\asd.txt"
+// 12 = "D:\F\storage\205\205_2\sales.json"
+// 13 = "D:\F\storage\205\asd.txt"
+// 14 = "D:\F\storage\206\asd.txt"
+// length = 15
+//     [[Prototype]] = Array(0)
